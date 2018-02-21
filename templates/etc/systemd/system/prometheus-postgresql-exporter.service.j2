@@ -1,0 +1,16 @@
+[Unit]
+Description=Prometheus PostgreSQL Exporter
+After=network.target
+
+[Service]
+Type=simple
+Environment="DATA_SOURCE_NAME={{ prometheus_postgresql_data_source_name }}"
+User={{ prometheus_exporters_common_user }}
+Group={{ prometheus_exporters_common_group }}
+ExecStart={{ prometheus_exporters_common_root_dir }}/postgresql_exporter_current {% for flag, flag_value in prometheus_postgresql_exporter_config_flags.iteritems() %}-{{ flag }}={{ flag_value }} {% endfor %}
+
+SyslogIdentifier=prometheus_postgresql_exporter
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

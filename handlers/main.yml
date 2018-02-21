@@ -1,0 +1,12 @@
+---
+
+- name: service reenable
+  command: systemctl reenable prometheus-postgresql-exporter.service
+
+- name: reinit postgresql exporter
+  command: initctl reload-configuration
+
+- name: restart postgresql exporter
+  service:
+    name: prometheus-postgresql-exporter
+    state: restarted

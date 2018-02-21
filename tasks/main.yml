@@ -1,0 +1,71 @@
+---
+
+- name: download prometheus postgresql exporter binary
+  get_url:
+    url: "{{ url }}"
+    dest: "{{ prometheus_exporters_common_dist_dir }}"
+  register: prometheus_postgresql_exporter_updated
+  notify:
+    - restart postgresql exporter
+
+- name: update group and owner for files
+  file:
+    path: "{{ prometheus_exporters_common_dist_dir }}/{{ prometheus_postgresql_exporter_release_name }}"
+    owner: "{{ prometheus_exporters_common_user}}"
+    group: "{{ prometheus_exporters_common_group }}"
+    mode: 0755
+  when: prometheus_postgresql_exporter_updated | changed
+
+- name: create symlink to the current release
+  file:
+    src: "{{ prometheus_exporters_common_dist_dir }}/{{ prometheus_postgresql_exporter_release_name }}"
+    path: "{{ prometheus_exporters_common_root_dir }}/postgresql_exporter_current"
+    state: link
+
+- name: create systemd service unit
+  template:
+    src: etc/systemd/system/prometheus-postgresql-exporter.service.j2
+    dest: /etc/systemd/system/prometheus-postgresql-exporter.service
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_service_mgr == 'systemd'
+  notify:
+    - service reenable
+    - restart postgresql exporter
+
+- name: Looking which version of upstart is install
+  command: initctl version
+  when: ansible_service_mgr == 'upstart'
+  register: upstart_version
+
+- name: create init service unit
+  template:
+    src: etc/init/prometheus-postgresql-exporter.conf.j2
+    dest: /etc/init/prometheus-postgresql-exporter.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_service_mgr == 'upstart'
+  notify:
+    - reinit postgresql exporter
+    - restart postgresql exporter
+
+- name: create sysvinit service unit
+  template:
+    src: etc/init.d/prometheus-postgresql-exporter.j2
+    dest: /etc/init.d/prometheus-postgresql-exporter
+    owner: root
+    group: root
+    mode: 0755
+  when: ansible_service_mgr == 'sysvinit'
+  notify:
+    - restart postgresql exporter
+
+- meta: flush_handlers
+
+- name: ensure prometheus postgresql exporter service is enabled and started
+  service:
+    name: prometheus-postgresql-exporter
+    state: started
+    enabled: yes

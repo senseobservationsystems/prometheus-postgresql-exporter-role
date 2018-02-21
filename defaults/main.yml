@@ -1,0 +1,15 @@
+---
+
+prometheus_postgresql_exporter_version: 0.2.2
+prometheus_postgresql_exporter_release_name: "postgres_exporter"
+url: "https://github.com/wrouesnel/postgres_exporter/releases/download/v{{ prometheus_postgresql_exporter_version }}/{{ prometheus_postgresql_exporter_release_name }}"
+
+prometheus_postgresql_exporter_config_flags:
+  'web.listen-address': '0.0.0.0:9187'
+  'log.level': 'info'
+
+prometheus_postgresql_exporter_db_user: 'postgres_exporter'
+prometheus_postgresql_exporter_db_password: ''
+
+#prometheus_postgresql_data_source_name: "postgresql://{{ prometheus_postgresql_exporter_db_user }}:{{ prometheus_postgresql_exporter_db_password }}@localhost:5432/postgres?sslmode=disable"
+prometheus_postgresql_data_source_name: "user={{ prometheus_postgresql_exporter_db_user }} database=postgres sslmode=disable"
